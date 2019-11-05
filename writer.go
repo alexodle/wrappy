@@ -98,9 +98,9 @@ func writeWrapperStruct(w io.Writer, iface *Interface) {
 	printf(w, "}\n\n")
 	for _, method := range iface.WrapperStruct.PublicMethods {
 		if method.ReturnType != nil {
-			printf(w, "func (o *%s) %s(%s) (%s) {\n", iface.WrapperStruct.Name, method.Name, formatParams(method.Params), formatParams(method.ReturnType))
+			printf(w, "func (%s *%s) %s(%s) (%s) {\n", method.Receiver.Name, iface.WrapperStruct.Name, method.Name, formatParams(method.Params), formatParams(method.ReturnType))
 		} else {
-			printf(w, "func (o *%s) %s(%s) {\n", iface.WrapperStruct.Name, method.Name, formatParams(method.Params))
+			printf(w, "func (%s *%s) %s(%s) {\n", method.Receiver.Name, iface.WrapperStruct.Name, method.Name, formatParams(method.Params))
 		}
 
 		newVarNames := unwrapParams(w, method.Params)
@@ -116,20 +116,20 @@ func writeWrapperStruct(w io.Writer, iface *Interface) {
 
 func applyToImpl(w io.Writer, method *Method, varNames []string) []string {
 	if method.IsFieldSetter {
-		printf(w, "o.impl.%s = %s\n", method.Field.Name, varNames[0])
+		printf(w, "%s.impl.%s = %s\n", method.Receiver.Name, method.Field.Name, varNames[0])
 		return nil
 	} else if method.IsFieldGetter {
-		printf(w, "retval := o.impl.%s\n", method.Field.Name)
+		printf(w, "retval := %s.impl.%s\n", method.Receiver.Name, method.Field.Name)
 		return []string{"retval"}
 	} else if method.ReturnType != nil {
 		var newVarNames []string
 		for i, _ := range method.ReturnType {
 			newVarNames = append(newVarNames, fmt.Sprintf("retval%d", i))
 		}
-		printf(w, "%s := o.impl.%s(%s)\n", strings.Join(newVarNames, ", "), method.Name, strings.Join(varNames, ", "))
+		printf(w, "%s := %s.impl.%s(%s)\n", strings.Join(newVarNames, ", "), method.Receiver.Name, method.Name, strings.Join(varNames, ", "))
 		return newVarNames
 	}
-	printf(w, "o.impl.%s(%s)\n", method.Name, strings.Join(varNames, ", "))
+	printf(w, "%s.impl.%s(%s)\n", method.Receiver.Name, method.Name, strings.Join(varNames, ", "))
 	return nil
 }
 

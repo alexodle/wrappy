@@ -182,12 +182,11 @@ func (t *MapType) DeepCopy() Type {
 	return &t2
 }
 
-type FuncType struct {
-	FuncParams     ParamsList
-	FuncReturnType ParamsList
+type UnsupportedType struct {
+	AstType string
 }
 
-func (t *FuncType) DeepCopy() Type {
+func (t *UnsupportedType) DeepCopy() Type {
 	t2 := *t
 	return &t2
 }

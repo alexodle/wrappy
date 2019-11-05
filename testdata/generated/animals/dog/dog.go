@@ -25,33 +25,33 @@ func (o *dogWrapper) GetImpl() *orig_dog.Dog {
 	return o.impl
 }
 
-func (o *dogWrapper) GetName() string {
-	retval := o.impl.Name
+func (wrapperRcvr *dogWrapper) GetName() string {
+	retval := wrapperRcvr.impl.Name
 	return retval
 }
 
-func (o *dogWrapper) SetName(v string) {
-	o.impl.Name = v
+func (wrapperRcvr *dogWrapper) SetName(v string) {
+	wrapperRcvr.impl.Name = v
 }
 
-func (o *dogWrapper) Barks() bool {
-	retval0 := o.impl.Barks()
+func (wrapperRcvr *dogWrapper) Barks() bool {
+	retval0 := wrapperRcvr.impl.Barks()
 	return retval0
 }
 
-func (o *dogWrapper) Meows() bool {
-	retval0 := o.impl.Meows()
+func (wrapperRcvr *dogWrapper) Meows() bool {
+	retval0 := wrapperRcvr.impl.Meows()
 	return retval0
 }
 
-func (o *dogWrapper) Eat(f food.Food) int {
+func (wrapperRcvr *dogWrapper) Eat(f food.Food) int {
 	f_1 := f.GetImpl()
-	retval0 := o.impl.Eat(f_1)
+	retval0 := wrapperRcvr.impl.Eat(f_1)
 	return retval0
 }
 
-func (o *dogWrapper) Clone() (Dog, error) {
-	retval0, retval1 := o.impl.Clone()
+func (wrapperRcvr *dogWrapper) Clone() (Dog, error) {
+	retval0, retval1 := wrapperRcvr.impl.Clone()
 	retval0_1 := NewDog(retval0)
 	return retval0_1, retval1
 }

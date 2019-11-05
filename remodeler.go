@@ -78,7 +78,7 @@ func (m *modeler) buildWrappers() {
 func (m *modeler) fillWrappers() {
 	for _, iface := range m.wrapperStore {
 		newStructName := strings.ToLower(iface.OriginalStruct.Name[0:1]) + iface.OriginalStruct.Name[1:] + "Wrapper"
-		recvParam := &Param{Name: "o", Type: &TopLevelType{Type: &ModeledType{
+		recvParam := &Param{Name: "wrapperRcvr", Type: &TopLevelType{Type: &ModeledType{
 			BaseType:        BaseType{Name: newStructName, IsPtr: true},
 			LocalNameForPkg: newStructName,
 		}}}
@@ -205,8 +205,7 @@ func (m *modeler) convertTypeForFileRecursive(f *File, t Type, ignoreWrappers bo
 		ct, imps, hasWrapper := m.convertTypeForFileRecursive(f, tt.Type, ignoreWrappers)
 		newType.Type = ct
 		return newType, imps, hasWrapper
-	case *FuncType:
-		// Not impl
+	case *UnsupportedType:
 		return t, ImportStore{}, false
 	}
 
@@ -254,12 +253,9 @@ func localizeType(t *ModeledType, imports ImportStore, namePrefix string) {
 }
 
 func isUnsupportedType(t Type) bool {
-	if _, ok := t.(*FuncType); ok {
-		return true
-	}
 	switch tt := t.(type) {
-	case *FuncType:
-		return true // funcs not support yet
+	case *UnsupportedType:
+		return true
 
 	case *TopLevelType:
 		return isUnsupportedType(tt.Type)

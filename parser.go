@@ -119,8 +119,10 @@ func fillMethods(node ast.Node, directory string, structs StructStore, store Imp
 		case *ast.FuncDecl:
 			m := newMethod(v, structs, pkg, store)
 			if m.Receiver != nil && isPublic(m.Name) {
-				s := structs[m.Receiver.Type.Type.(*BaseType).FullName()]
-				s.PublicMethods = append(s.PublicMethods, m)
+				structName := m.Receiver.Type.Type.(*BaseType).FullName()
+				if s, ok := structs[structName]; ok {
+					s.PublicMethods = append(s.PublicMethods, m)
+				}
 			}
 		case *ast.TypeSpec:
 			if t, ok := v.Type.(*ast.StructType); ok {
@@ -257,11 +259,8 @@ func parseTypeRecursive(exp ast.Expr, structs StructStore, pkg *Package, imports
 			KeyType:   parseTypeRecursive(xv.Key, structs, pkg, imports),
 			ValueType: parseTypeRecursive(xv.Value, structs, pkg, imports),
 		}
-	case *ast.FuncType:
-		return &FuncType{
-			FuncParams:     getParams(xv.Params, structs, pkg, imports),
-			FuncReturnType: getReturnParams(xv.Results, structs, pkg, imports),
-		}
+	case *ast.FuncType, *ast.Ellipsis:
+		return &UnsupportedType{AstType: fmt.Sprintf("%T", xv)}
 	default:
 		panic(fmt.Sprintf("no type found: %T", exp))
 	}
@@ -272,6 +271,9 @@ func maybeNewReceiver(fn *ast.FuncDecl, structs StructStore, pkg *Package) *Para
 
 	if fn.Recv != nil {
 		for _, f := range fn.Recv.List {
+			if f.Names == nil {
+				continue
+			}
 			t := parseType(f.Type, structs, pkg, nil)
 			rec = &Param{
 				Name: f.Names[0].Name,

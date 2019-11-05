@@ -19,7 +19,7 @@ func (o *foodWrapper) GetImpl() *orig_food.Food {
 	return o.impl
 }
 
-func (o *foodWrapper) Brand() string {
-	retval0 := o.impl.Brand()
+func (wrapperRcvr *foodWrapper) Brand() string {
+	retval0 := wrapperRcvr.impl.Brand()
 	return retval0
 }
