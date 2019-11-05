@@ -16,5 +16,5 @@ func main() {
 	}
 
 	input_dir, output_dir := args[0], args[1]
-	destructor.GenerateWrappers(input_dir, output_dir)
+	wrappy.GenerateWrappers(input_dir, output_dir)
 }

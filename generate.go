@@ -1,4 +1,4 @@
-package destructor
+package wrappy
 
 func GenerateWrappers(inputDir string, outputDir string) {
 	structs := Parse(inputDir)

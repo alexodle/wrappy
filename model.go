@@ -1,4 +1,4 @@
-package destructor
+package wrappy
 
 import "sort"
 

@@ -1,4 +1,4 @@
-package destructor
+package wrappy
 
 import (
 	"github.com/stretchr/testify/require"
