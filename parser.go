@@ -103,11 +103,20 @@ func parseStructsFromFile(fset *token.FileSet, filepath string, directory string
 		panic(err)
 	}
 
-	fillStructs(f, directory, structs, &File{Path: filepath, Imports: createImportStore(f), Package: getPkg(directory)})
+	fillStructs(f, structs, &File{Path: filepath, Imports: createImportStore(f), Package: getPkg(directory)})
 }
 
 func isPublic(name string) bool {
 	return strings.ToUpper(name[0:1]) == name[0:1]
+}
+
+func containsMethodName(methods MethodList, name string) bool {
+	for _, m := range methods {
+		if m.Name == name {
+			return true
+		}
+	}
+	return false
 }
 
 func fillMethods(node ast.Node, directory string, structs StructStore, store ImportStore) {
@@ -120,15 +129,21 @@ func fillMethods(node ast.Node, directory string, structs StructStore, store Imp
 			if m.Receiver != nil && isPublic(m.Name) {
 				structName := m.Receiver.Type.Type.(*BaseType).FullName()
 				if s, ok := structs[structName]; ok {
-					s.PublicMethods = append(s.PublicMethods, m)
+					if !containsMethodName(s.PublicMethods, m.Name) {
+						s.PublicMethods = append(s.PublicMethods, m)
+					} else {
+						fmt.Printf("WARN: skipping duplicate method %s for struct %s\n", m.Name, structName)
+					}
 				}
 			}
 		case *ast.TypeSpec:
 			if t, ok := v.Type.(*ast.StructType); ok {
 				if structName := v.Name.Name; isPublic(structName) {
 					structFullName := fullTypeName(pkg, structName)
-					fields := newFields(t, structs, pkg, store)
-					structs[structFullName].PublicFields = fields
+					if s, ok := structs[structFullName]; ok {
+						fields := newFields(t, structs, pkg, store)
+						s.PublicFields = fields
+					}
 				}
 			}
 		}
@@ -136,9 +151,11 @@ func fillMethods(node ast.Node, directory string, structs StructStore, store Imp
 	}), node)
 }
 
-func fillStructs(node ast.Node, directory string, structs StructStore, file *File) {
+func fillStructs(node ast.Node, structs StructStore, file *File) {
 	ast.Walk(walker(func(node ast.Node) bool {
 		switch v := node.(type) {
+		case *ast.FuncDecl:
+			return false
 		case *ast.TypeSpec:
 			if _, ok := v.Type.(*ast.StructType); ok {
 				s := newStruct(v, file)

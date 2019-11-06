@@ -10,7 +10,7 @@ type Animals struct {
 	Location Location
 	Dogs *[]*dog.Dog
 	DogsByNameField map[string]*dog.Dog
-	*AnimalDescription
+	AnimalDescription
 }
 
 func (a *Animals) GetAllDogs(ctx context.Context) []*dog.Dog {

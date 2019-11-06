@@ -138,7 +138,7 @@ func (t *TopLevelType) DeepCopy() Type {
 		tt.Type = t.Type.DeepCopy()
 	}
 	if t.OriginalType != nil {
-		tt.OriginalType = tt.OriginalType.DeepCopy()
+		tt.OriginalType = t.OriginalType.DeepCopy()
 	}
 	return tt
 }

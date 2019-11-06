@@ -64,7 +64,7 @@ type Animals interface {
 	GetDogs() *[]dog.Dog
 	GetDogsByNameField() map[string]dog.Dog
 	GetDogsByNames(names []string) map[string]dog.Dog
-	GetLocation() *orig_animals.Location
+	GetLocation() orig_animals.Location
 	GetLocations() []orig_animals.Location
 	SetAnimalDescription(v AnimalDescription)
 	SetDogs(v *[]dog.Dog)
@@ -94,10 +94,9 @@ func (wrapperRcvr *animalsWrapper) SetLocations(v []orig_animals.Location) {
 	wrapperRcvr.impl.Locations = v
 }
 
-func (wrapperRcvr *animalsWrapper) GetLocation() *orig_animals.Location {
+func (wrapperRcvr *animalsWrapper) GetLocation() orig_animals.Location {
 	retval := wrapperRcvr.impl.Location
-	retval_1 := &retval
-	return retval_1
+	return retval
 }
 
 func (wrapperRcvr *animalsWrapper) SetLocation(v orig_animals.Location) {
@@ -149,13 +148,12 @@ func (wrapperRcvr *animalsWrapper) SetDogsByNameField(v map[string]dog.Dog) {
 }
 
 func (wrapperRcvr *animalsWrapper) GetAnimalDescription() AnimalDescription {
-	retval := wrapperRcvr.impl.AnimalDescription
-	retval_1 := NewAnimalDescription(retval)
+	retval_1 := NewAnimalDescription(&wrapperRcvr.impl.AnimalDescription)
 	return retval_1
 }
 
 func (wrapperRcvr *animalsWrapper) SetAnimalDescription(v AnimalDescription) {
-	v_1 := v.GetImpl()
+	v_1 := *v.GetImpl()
 	wrapperRcvr.impl.AnimalDescription = v_1
 }
 

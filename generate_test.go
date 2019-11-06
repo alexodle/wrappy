@@ -29,7 +29,7 @@ func Test_GeneratedCode(t *testing.T) {
 		Locations:       []orig_animals.Location{{}},
 		Dogs:            &[]*orig_dog.Dog{dog1},
 		DogsByNameField: map[string]*orig_dog.Dog{dog1.Name: dog1},
-		AnimalDescription: &orig_animals.AnimalDescription{
+		AnimalDescription: orig_animals.AnimalDescription{
 			Breed:  "Labrador",
 			Name:   "Rooney",
 			Weight: 60,
@@ -41,4 +41,7 @@ func Test_GeneratedCode(t *testing.T) {
 
 	d = animal.GetDogsByNameField()[dog1.Name]
 	require.Equal(t, dog1, d.GetImpl())
+
+	animal.GetAnimalDescription().SetBreed("Pit")
+	require.Equal(t, "Pit", animal.GetAnimalDescription().GetBreed())
 }

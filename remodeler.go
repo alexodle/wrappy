@@ -98,7 +98,7 @@ func (m *remodeler) fillWrappers() {
 				continue
 			}
 			setParams := ParamsList{&Param{Name: "v", Type: f.Type}}
-			getReturnType := ParamsList{&Param{Type: decoratedReturnType(f.Type)}}
+			getReturnType := ParamsList{&Param{Type: f.Type}}
 			iface.Methods = append(iface.Methods,
 				&Method{
 					Name:       "Get" + f.Name,
@@ -137,9 +137,6 @@ func (m *remodeler) fillWrappers() {
 			iface.File.Imports.AddAll(imps1)
 
 			returnType, imps2 := m.convertTypesForFile(iface.File, method.ReturnType)
-			for _, p := range returnType {
-				p.Type = decoratedReturnType(p.Type)
-			}
 			iface.File.Imports.AddAll(imps2)
 
 			iface.Methods = append(iface.Methods, &Method{
@@ -155,17 +152,6 @@ func (m *remodeler) fillWrappers() {
 			})
 		}
 	}
-}
-
-// decorateReturnType ensures the return type is pointer-like
-func decoratedReturnType(t *TopLevelType) *TopLevelType {
-	if mt, ok := t.Type.(*ModeledType); ok && !mt.IsPtr && !mt.IsBuiltin && mt.Interface == nil {
-		origT := t.Type
-		t = t.DeepCopy().(*TopLevelType)
-		t.Type.(*ModeledType).IsPtr = true
-		t.OriginalType = origT
-	}
-	return t
 }
 
 func (m *remodeler) convertTypesForFile(f *File, params ParamsList) (ParamsList, ImportStore) {
