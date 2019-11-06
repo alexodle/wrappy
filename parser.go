@@ -5,7 +5,6 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"golang.org/x/tools/go/packages"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -299,22 +298,10 @@ func fullTypeName(pkg *Package, typeName string) string {
 
 func getPkg(directory string) *Package {
 	pkgPath := packagePath(directory)
-	pkgs, err := packages.Load(nil, pkgPath)
-	if err != nil {
-		panic(err)
-	} else if len(pkgs) != 1 {
-		panic(fmt.Sprintf("found multiple packages for directory: %s", directory))
-	}
-
-	pkg := pkgs[0]
-	if pkg.Errors != nil {
-		packages.PrintErrors(pkgs)
-		panic(pkg.Errors[0])
-	}
-
+	pkgName := pkgPath[strings.LastIndex(pkgPath, "/")+1:]
 	return &Package{
 		Path: pkgPath,
-		Name: pkg.Name,
+		Name: pkgName,
 	}
 }
 
