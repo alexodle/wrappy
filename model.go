@@ -37,6 +37,16 @@ type Package struct {
 	Path string
 }
 
+func (p *Package) DeepCopy() *Package {
+	if p == nil {
+		return nil
+	}
+	return &Package{
+		Name: p.Name,
+		Path: p.Path,
+	}
+}
+
 type Interface struct {
 	File                   *File
 	Name                   string
@@ -123,15 +133,20 @@ type TopLevelType struct {
 }
 
 func (t *TopLevelType) DeepCopy() Type {
-	t2 := *t
-	return &t2
+	tt := &TopLevelType{}
+	if t.Type != nil {
+		tt.Type = t.Type.DeepCopy()
+	}
+	if t.OriginalType != nil {
+		tt.OriginalType = tt.OriginalType.DeepCopy()
+	}
+	return tt
 }
 
 type BaseType struct {
 	Name      string
 	IsBuiltin bool
 	Package   *Package
-	IsBuiltIn bool
 	IsPtr     bool
 }
 
@@ -148,6 +163,7 @@ func (t *BaseType) FullName() string {
 
 func (t *BaseType) DeepCopy() Type {
 	t2 := *t
+	t2.Package = t2.Package.DeepCopy()
 	return &t2
 }
 
@@ -156,6 +172,11 @@ type ModeledType struct {
 	LocalNameForPkg   string
 	NewFuncNameForPkg string
 	Interface         *Interface
+}
+
+func (t *ModeledType) DeepCopy() Type {
+	t2 := *t
+	return &t2
 }
 
 type ArrayType struct {

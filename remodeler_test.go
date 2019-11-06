@@ -15,7 +15,7 @@ func Test_convertLocalTypeForFile(t *testing.T) {
 	ifaces := InterfaceStore{origStruct.FullName(): newIFace}
 
 	structs := StructStore{origStruct.FullName(): origStruct}
-	modeler := &modeler{structStore: structs, wrapperStore: ifaces, inputDir: "/input/", outputDir: "/output/"}
+	modeler := &remodeler{structStore: structs, wrapperStore: ifaces, inputDir: "/input/", outputDir: "/output/"}
 
 	newType, imports := modeler.convertTypeForFile(newFile,
 		&TopLevelType{Type: &MapType{
@@ -55,7 +55,7 @@ func Test_convertNonlocalTypeForFile(t *testing.T) {
 
 	writeToFile := &File{Path: "/output/a/a.go", Package: &Package{"a", "/output/a"}}
 	structs := StructStore{origStruct.FullName(): origStruct}
-	modeler := &modeler{structStore: structs, wrapperStore: ifaces, inputDir: "/input/", outputDir: "/output/"}
+	modeler := &remodeler{structStore: structs, wrapperStore: ifaces, inputDir: "/input/", outputDir: "/output/"}
 	newType, imports := modeler.convertTypeForFile(writeToFile, origType)
 
 	require.Equal(t, imports, ImportStore{
@@ -83,7 +83,7 @@ func Test_convertPtrs(t *testing.T) {
 	ifaces := InterfaceStore{origStruct.FullName(): newIFace}
 
 	structs := StructStore{origStruct.FullName(): origStruct}
-	modeler := &modeler{structStore: structs, wrapperStore: ifaces, inputDir: "/input/", outputDir: "/output/"}
+	modeler := &remodeler{structStore: structs, wrapperStore: ifaces, inputDir: "/input/", outputDir: "/output/"}
 
 	newType, imports := modeler.convertTypeForFile(newFile,
 		&TopLevelType{Type: &ArrayType{IsPtr: true, Type: &BaseType{

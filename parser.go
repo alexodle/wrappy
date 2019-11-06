@@ -126,9 +126,11 @@ func fillMethods(node ast.Node, directory string, structs StructStore, store Imp
 			}
 		case *ast.TypeSpec:
 			if t, ok := v.Type.(*ast.StructType); ok {
-				structName := fullTypeName(pkg, v.Name.Name)
-				fields := newFields(t, structs, pkg, store)
-				structs[structName].PublicFields = fields
+				if structName := v.Name.Name; isPublic(structName) {
+					structFullName := fullTypeName(pkg, structName)
+					fields := newFields(t, structs, pkg, store)
+					structs[structFullName].PublicFields = fields
+				}
 			}
 		}
 		return true
@@ -141,7 +143,9 @@ func fillStructs(node ast.Node, directory string, structs StructStore, file *Fil
 		case *ast.TypeSpec:
 			if _, ok := v.Type.(*ast.StructType); ok {
 				s := newStruct(v, file)
-				structs[s.FullName()] = s
+				if isPublic(s.Name) {
+					structs[s.FullName()] = s
+				}
 			}
 		}
 		return true
@@ -259,8 +263,11 @@ func parseTypeRecursive(exp ast.Expr, structs StructStore, pkg *Package, imports
 			KeyType:   parseTypeRecursive(xv.Key, structs, pkg, imports),
 			ValueType: parseTypeRecursive(xv.Value, structs, pkg, imports),
 		}
-	case *ast.FuncType, *ast.Ellipsis:
+
+	// Not yet supported
+	case *ast.FuncType, *ast.Ellipsis, *ast.ChanType:
 		return &UnsupportedType{AstType: fmt.Sprintf("%T", xv)}
+
 	default:
 		panic(fmt.Sprintf("no type found: %T", exp))
 	}
@@ -291,31 +298,22 @@ func fullTypeName(pkg *Package, typeName string) string {
 }
 
 func getPkg(directory string) *Package {
-	fullPath, err := filepath.Abs(directory)
-	if err != nil {
-		panic(err)
-	}
-	gopath := os.Getenv("GOPATH")
-	fullPath = strings.TrimPrefix(fullPath, gopath+"/src/")
-	pkgs, err := packages.Load(nil, fullPath)
+	pkgPath := packagePath(directory)
+	pkgs, err := packages.Load(nil, pkgPath)
 	if err != nil {
 		panic(err)
 	} else if len(pkgs) != 1 {
 		panic(fmt.Sprintf("found multiple packages for directory: %s", directory))
 	}
+
 	pkg := pkgs[0]
 	if pkg.Errors != nil {
+		packages.PrintErrors(pkgs)
 		panic(pkg.Errors[0])
 	}
 
-	path := pkg.PkgPath
-	vendorIdx := strings.Index(path, "/vendor/")
-	if vendorIdx != -1 {
-		path = path[vendorIdx+len("/vendor/"):]
-	}
-
 	return &Package{
-		Path: path,
+		Path: pkgPath,
 		Name: pkg.Name,
 	}
 }

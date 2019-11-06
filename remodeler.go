@@ -7,7 +7,7 @@ import (
 )
 
 func Remodel(structs StructStore, inputDir, outputDir string) []*File {
-	modeler := &modeler{structStore: structs, wrapperStore: InterfaceStore{}, inputDir: inputDir, outputDir: outputDir}
+	modeler := &remodeler{structStore: structs, wrapperStore: InterfaceStore{}, inputDir: inputDir, outputDir: outputDir}
 	modeler.buildWrappers()
 	modeler.fillWrappers()
 
@@ -29,7 +29,7 @@ func Remodel(structs StructStore, inputDir, outputDir string) []*File {
 	return filesList
 }
 
-type modeler struct {
+type remodeler struct {
 	structStore  StructStore
 	wrapperStore InterfaceStore
 	inputDir     string
@@ -40,7 +40,7 @@ func shouldWrap(st *Struct) bool {
 	return len(st.PublicMethods) > 0 || len(st.PublicFields) > 0
 }
 
-func (m *modeler) buildWrappers() {
+func (m *remodeler) buildWrappers() {
 	newFiles := map[string]*File{}
 	for key, st := range m.structStore {
 		if !shouldWrap(st) {
@@ -57,7 +57,7 @@ func (m *modeler) buildWrappers() {
 				},
 				Package: &Package{
 					Name: st.File.Package.Name,
-					Path: strings.Replace(st.File.Package.Path, m.inputDir, m.outputDir, 1),
+					Path: strings.Replace(st.File.Package.Path, packagePath(m.inputDir), packagePath(m.outputDir), 1),
 				},
 			}
 			newFiles[newPath] = newFile
@@ -75,7 +75,7 @@ func (m *modeler) buildWrappers() {
 	}
 }
 
-func (m *modeler) fillWrappers() {
+func (m *remodeler) fillWrappers() {
 	for _, iface := range m.wrapperStore {
 		newStructName := strings.ToLower(iface.OriginalStruct.Name[0:1]) + iface.OriginalStruct.Name[1:] + "Wrapper"
 		recvParam := &Param{Name: "wrapperRcvr", Type: &TopLevelType{Type: &ModeledType{
@@ -98,7 +98,7 @@ func (m *modeler) fillWrappers() {
 				continue
 			}
 			setParams := ParamsList{&Param{Name: "v", Type: f.Type}}
-			getReturnType := ParamsList{&Param{Type: f.Type}}
+			getReturnType := ParamsList{&Param{Type: decoratedReturnType(f.Type)}}
 			iface.Methods = append(iface.Methods,
 				&Method{
 					Name:       "Get" + f.Name,
@@ -137,6 +137,9 @@ func (m *modeler) fillWrappers() {
 			iface.File.Imports.AddAll(imps1)
 
 			returnType, imps2 := m.convertTypesForFile(iface.File, method.ReturnType)
+			for _, p := range returnType {
+				p.Type = decoratedReturnType(p.Type)
+			}
 			iface.File.Imports.AddAll(imps2)
 
 			iface.Methods = append(iface.Methods, &Method{
@@ -154,7 +157,18 @@ func (m *modeler) fillWrappers() {
 	}
 }
 
-func (m *modeler) convertTypesForFile(f *File, params ParamsList) (ParamsList, ImportStore) {
+// decorateReturnType ensures the return type is pointer-like
+func decoratedReturnType(t *TopLevelType) *TopLevelType {
+	if mt, ok := t.Type.(*ModeledType); ok && !mt.IsPtr && !mt.IsBuiltin && mt.Interface == nil {
+		origT := t.Type
+		t = t.DeepCopy().(*TopLevelType)
+		t.Type.(*ModeledType).IsPtr = true
+		t.OriginalType = origT
+	}
+	return t
+}
+
+func (m *remodeler) convertTypesForFile(f *File, params ParamsList) (ParamsList, ImportStore) {
 	var newParams ParamsList
 	importStore := ImportStore{}
 	for _, p := range params {
@@ -168,7 +182,7 @@ func (m *modeler) convertTypesForFile(f *File, params ParamsList) (ParamsList, I
 	return newParams, importStore
 }
 
-func (m *modeler) convertTypeForFile(f *File, t *TopLevelType) (*TopLevelType, ImportStore) {
+func (m *remodeler) convertTypeForFile(f *File, t *TopLevelType) (*TopLevelType, ImportStore) {
 	newType, imports, hasWrapper := m.convertTypeForFileRecursive(f, t.Type, false)
 	tt := &TopLevelType{Type: newType}
 	if hasWrapper {
@@ -179,7 +193,7 @@ func (m *modeler) convertTypeForFile(f *File, t *TopLevelType) (*TopLevelType, I
 	return tt, imports
 }
 
-func (m *modeler) convertMapTypeForFile(f *File, t *MapType, ignoreWrappers bool) (Type, ImportStore, bool) {
+func (m *remodeler) convertMapTypeForFile(f *File, t *MapType, ignoreWrappers bool) (Type, ImportStore, bool) {
 	// shallow copy
 	var newType = t.DeepCopy().(*MapType)
 
@@ -196,7 +210,7 @@ func (m *modeler) convertMapTypeForFile(f *File, t *MapType, ignoreWrappers bool
 	return newType, imports1, hasWrapper2
 }
 
-func (m *modeler) convertTypeForFileRecursive(f *File, t Type, ignoreWrappers bool) (Type, ImportStore, bool) {
+func (m *remodeler) convertTypeForFileRecursive(f *File, t Type, ignoreWrappers bool) (Type, ImportStore, bool) {
 	switch tt := t.(type) {
 	case *MapType:
 		return m.convertMapTypeForFile(f, tt, ignoreWrappers)

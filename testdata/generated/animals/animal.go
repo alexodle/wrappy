@@ -64,10 +64,12 @@ type Animals interface {
 	GetDogs() *[]dog.Dog
 	GetDogsByNameField() map[string]dog.Dog
 	GetDogsByNames(names []string) map[string]dog.Dog
+	GetLocation() *orig_animals.Location
 	GetLocations() []orig_animals.Location
 	SetAnimalDescription(v AnimalDescription)
 	SetDogs(v *[]dog.Dog)
 	SetDogsByNameField(v map[string]dog.Dog)
+	SetLocation(v orig_animals.Location)
 	SetLocations(v []orig_animals.Location)
 }
 
@@ -90,6 +92,16 @@ func (wrapperRcvr *animalsWrapper) GetLocations() []orig_animals.Location {
 
 func (wrapperRcvr *animalsWrapper) SetLocations(v []orig_animals.Location) {
 	wrapperRcvr.impl.Locations = v
+}
+
+func (wrapperRcvr *animalsWrapper) GetLocation() *orig_animals.Location {
+	retval := wrapperRcvr.impl.Location
+	retval_1 := &retval
+	return retval_1
+}
+
+func (wrapperRcvr *animalsWrapper) SetLocation(v orig_animals.Location) {
+	wrapperRcvr.impl.Location = v
 }
 
 func (wrapperRcvr *animalsWrapper) GetDogs() *[]dog.Dog {

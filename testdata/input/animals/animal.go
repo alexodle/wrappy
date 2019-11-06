@@ -7,6 +7,7 @@ import (
 
 type Animals struct {
 	Locations []Location
+	Location Location
 	Dogs *[]*dog.Dog
 	DogsByNameField map[string]*dog.Dog
 	*AnimalDescription

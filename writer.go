@@ -214,10 +214,20 @@ func unwrapMapType(w io.Writer, oldT, newT *MapType, varBaseName string, i int) 
 func unwrapType(w io.Writer, oldT, newT Type, varBaseName string, i int) int {
 	if _, ok := newT.(*ModeledType); ok {
 		oldVarName, newVarName := getVarNames(varBaseName, i)
-		if oldT.(*ModeledType).IsPtr {
-			printf(w, "%s := %s.GetImpl()\n", newVarName, oldVarName)
+		if newT.(*ModeledType).Interface != nil {
+			if oldT.(*ModeledType).IsPtr {
+				printf(w, "%s := %s.GetImpl()\n", newVarName, oldVarName)
+			} else {
+				printf(w, "%s := *%s.GetImpl()\n", newVarName, oldVarName)
+			}
+		} else if oldT.(*ModeledType).IsPtr != newT.(*ModeledType).IsPtr {
+			if oldT.(*ModeledType).IsPtr {
+				printf(w, "%s := &%s\n", newVarName, oldVarName)
+			} else {
+				printf(w, "%s := *%s\n", newVarName, oldVarName)
+			}
 		} else {
-			printf(w, "%s := *%s.GetImpl()\n", newVarName, oldVarName)
+			panic("why are we here?")
 		}
 		return i + 1
 	}
@@ -274,10 +284,20 @@ func wrapParams(w io.Writer, method *Method, varNames []string) []string {
 func wrapType(w io.Writer, oldT, newT Type, varBaseName string, i int) int {
 	if mt, ok := newT.(*ModeledType); ok {
 		oldVarName, newVarName := getVarNames(varBaseName, i)
-		if oldT.(*ModeledType).IsPtr {
-			printf(w, "%s := %s(%s)\n", newVarName, mt.NewFuncNameForPkg, oldVarName)
+		if mt.Interface != nil {
+			if oldT.(*ModeledType).IsPtr {
+				printf(w, "%s := %s(%s)\n", newVarName, mt.NewFuncNameForPkg, oldVarName)
+			} else {
+				printf(w, "%s := %s(&%s)\n", newVarName, mt.NewFuncNameForPkg, oldVarName)
+			}
+		} else if mt.IsPtr != oldT.(*ModeledType).IsPtr {
+			if oldT.(*ModeledType).IsPtr {
+				printf(w, "%s := *%s\n", newVarName, oldVarName)
+			} else {
+				printf(w, "%s := &%s\n", newVarName, oldVarName)
+			}
 		} else {
-			printf(w, "%s := %s(&%s)\n", newVarName, mt.NewFuncNameForPkg, oldVarName)
+			panic("why are we here?")
 		}
 		return i + 1
 	}
