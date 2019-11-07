@@ -75,6 +75,28 @@ func (m *remodeler) buildWrappers() {
 	}
 }
 
+// decorateFieldGetter ensures that field getters return references to underlying structs
+func decorateFieldGetter(t *TopLevelType) *TopLevelType {
+	newT := t.DeepCopy().(*TopLevelType)
+	newT.OriginalType = t.Type
+
+	switch tt := newT.Type.(type) {
+	case *ModeledType:
+		if tt.IsPtr || tt.Interface != nil || tt.IsBuiltin || tt.UnderlyingType != "struct" {
+			return t
+		}
+		tt.IsPtr = true
+	case *ArrayType:
+		return t
+	case *MapType:
+		return t
+	default:
+		panic(fmt.Sprintf("unsupported type: %T", newT.Type))
+	}
+
+	return newT
+}
+
 func (m *remodeler) fillWrappers() {
 	for _, iface := range m.wrapperStore {
 		newStructName := strings.ToLower(iface.OriginalStruct.Name[0:1]) + iface.OriginalStruct.Name[1:] + "Wrapper"
@@ -99,6 +121,8 @@ func (m *remodeler) fillWrappers() {
 			}
 			setParams := ParamsList{&Param{Name: "v", Type: f.Type}}
 			getReturnType := ParamsList{&Param{Type: f.Type}}
+			getReturnType[0].Type = decorateFieldGetter(getReturnType[0].Type)
+
 			iface.Methods = append(iface.Methods,
 				&Method{
 					Name:       "Get" + f.Name,

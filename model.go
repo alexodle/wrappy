@@ -144,14 +144,11 @@ func (t *TopLevelType) DeepCopy() Type {
 }
 
 type BaseType struct {
-	Name      string
-	IsBuiltin bool
-	Package   *Package
-	IsPtr     bool
-}
-
-func (t *BaseType) GetBaseType() Type {
-	return t
+	Name           string
+	IsBuiltin      bool
+	Package        *Package
+	IsPtr          bool
+	UnderlyingType string
 }
 
 func (t *BaseType) FullName() string {

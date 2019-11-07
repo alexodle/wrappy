@@ -255,13 +255,37 @@ func addStar(t Type) Type {
 	return t
 }
 
+func convertUnderlyingType(ident *ast.Ident) string {
+	if ident.Obj == nil || ident.Obj.Decl == nil {
+		return ident.Name
+	}
+	switch t := ident.Obj.Decl.(*ast.TypeSpec).Type.(type) {
+	case *ast.StructType:
+		return "struct"
+	case *ast.FuncType:
+		return "func"
+	case *ast.InterfaceType:
+		return "interface"
+	case *ast.ArrayType:
+		return "array"
+	case *ast.MapType:
+		return "map"
+	case *ast.Ident:
+		return convertUnderlyingType(t)
+	case *ast.SelectorExpr:
+		return convertUnderlyingType(t.Sel)
+	default:
+		panic(fmt.Sprintf("idunno: %T", ident.Obj.Decl.(*ast.TypeSpec).Type))
+	}
+}
+
 func parseTypeRecursive(exp ast.Expr, structs StructStore, pkg *Package, imports ImportStore) Type {
 	switch xv := exp.(type) {
 	case *ast.Ident:
 		if isBuiltin(xv.Name) {
 			return &BaseType{Name: xv.Name, IsBuiltin: true}
 		}
-		return &BaseType{Name: xv.Name, Package: pkg}
+		return &BaseType{Name: xv.Name, Package: pkg, UnderlyingType: convertUnderlyingType(xv)}
 	case *ast.InterfaceType:
 		if xv.Methods != nil && xv.Methods.List != nil && len(xv.Methods.List) > 0 {
 			panic(fmt.Errorf("non-empty interface params not supported"))
@@ -269,7 +293,7 @@ func parseTypeRecursive(exp ast.Expr, structs StructStore, pkg *Package, imports
 		return &BaseType{Name: "interface{}", IsBuiltin: true}
 	case *ast.SelectorExpr:
 		imp := imports[xv.X.(*ast.Ident).Name]
-		return &BaseType{Name: xv.Sel.Name, Package: &Package{Name: imp.ImplicitName, Path: imp.Path}}
+		return &BaseType{Name: xv.Sel.Name, Package: &Package{Name: imp.ImplicitName, Path: imp.Path}, UnderlyingType: convertUnderlyingType(xv.Sel)}
 	case *ast.StarExpr:
 		return addStar(parseTypeRecursive(xv.X, structs, pkg, imports))
 	case *ast.ArrayType:

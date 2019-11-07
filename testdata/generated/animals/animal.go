@@ -64,7 +64,7 @@ type Animals interface {
 	GetDogs() *[]dog.Dog
 	GetDogsByNameField() map[string]dog.Dog
 	GetDogsByNames(names []string) map[string]dog.Dog
-	GetLocation() orig_animals.Location
+	GetLocation() *orig_animals.Location
 	GetLocations() []orig_animals.Location
 	SetAnimalDescription(v AnimalDescription)
 	SetDogs(v *[]dog.Dog)
@@ -87,15 +87,23 @@ func (o *animalsWrapper) GetImpl() *orig_animals.Animals {
 
 func (wrapperRcvr *animalsWrapper) GetLocations() []orig_animals.Location {
 	retval := wrapperRcvr.impl.Locations
-	return retval
+	var retval_1 []orig_animals.Location
+	for _, it := range retval {
+		retval_1 = append(retval_1, it)
+	}
+	return retval_1
 }
 
 func (wrapperRcvr *animalsWrapper) SetLocations(v []orig_animals.Location) {
-	wrapperRcvr.impl.Locations = v
+	var v_1 []orig_animals.Location
+	for _, it := range v {
+		v_1 = append(v_1, it)
+	}
+	wrapperRcvr.impl.Locations = v_1
 }
 
-func (wrapperRcvr *animalsWrapper) GetLocation() orig_animals.Location {
-	retval := wrapperRcvr.impl.Location
+func (wrapperRcvr *animalsWrapper) GetLocation() *orig_animals.Location {
+	retval := &wrapperRcvr.impl.Location
 	return retval
 }
 
@@ -148,7 +156,8 @@ func (wrapperRcvr *animalsWrapper) SetDogsByNameField(v map[string]dog.Dog) {
 }
 
 func (wrapperRcvr *animalsWrapper) GetAnimalDescription() AnimalDescription {
-	retval_1 := NewAnimalDescription(&wrapperRcvr.impl.AnimalDescription)
+	retval := &wrapperRcvr.impl.AnimalDescription
+	retval_1 := NewAnimalDescription(retval)
 	return retval_1
 }
 
@@ -168,7 +177,11 @@ func (wrapperRcvr *animalsWrapper) GetAllDogs(ctx orig_context.Context) []dog.Do
 }
 
 func (wrapperRcvr *animalsWrapper) GetDogsByNames(names []string) map[string]dog.Dog {
-	retval0 := wrapperRcvr.impl.GetDogsByNames(names)
+	var names_1 []string
+	for _, it := range names {
+		names_1 = append(names_1, it)
+	}
+	retval0 := wrapperRcvr.impl.GetDogsByNames(names_1)
 	var retval0_1 map[string]dog.Dog
 	retval0_1 = map[string]dog.Dog{}
 	for k, it := range retval0 {
@@ -185,7 +198,13 @@ func (wrapperRcvr *animalsWrapper) GetDogByName(name string) dog.Dog {
 }
 
 func (wrapperRcvr *animalsWrapper) AddAnimals(animals *[]interface{}) error {
-	retval0 := wrapperRcvr.impl.AddAnimals(animals)
+	var animals_1 *[]interface{}
+	if animals != nil {
+		for _, it := range *animals {
+			*animals_1 = append(*animals_1, it)
+		}
+	}
+	retval0 := wrapperRcvr.impl.AddAnimals(animals_1)
 	return retval0
 }
 
