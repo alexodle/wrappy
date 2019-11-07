@@ -2,8 +2,9 @@ package wrappy
 
 import (
 	"github.com/alexodle/wrappy/testdata/generated/animals"
+	"github.com/alexodle/wrappy/testdata/generated/animals/util"
 	orig_animals "github.com/alexodle/wrappy/testdata/input/animals"
-	orig_dog "github.com/alexodle/wrappy/testdata/input/animals/dog"
+	orig_util "github.com/alexodle/wrappy/testdata/input/animals/util"
 	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
@@ -15,33 +16,43 @@ func Test_Generate(t *testing.T) {
 }
 
 func Test_GeneratedCode(t *testing.T) {
-	desc := animals.NewAnimalDescription(&orig_animals.AnimalDescription{
-		Breed:  "Labrador",
-		Name:   "Rooney",
+	impl := orig_animals.NewAnimalStore()
+	st := animals.NewAnimalStore(impl)
+
+	require.Len(t, st.GetAllAnimals(), 0)
+	_, ok := st.GetAnimalByName("Rover")
+	require.False(t, ok)
+
+	rover := &orig_animals.Animal{AnimalDescription: orig_animals.AnimalDescription{
+		Name:   "Rover",
+		Age:    4,
+		Type:   "Dog",
 		Weight: 60,
-	})
-	require.Equal(t, "Labrador", desc.GetBreed())
-	desc.SetBreed("Shepherd")
-	require.Equal(t, "Shepherd", desc.GetBreed())
+	}}
+	st.AddAnimal(animals.NewAnimal(rover))
 
-	dog1 := &orig_dog.Dog{Name: "Dog1"}
-	animal := animals.NewAnimals(&orig_animals.Animals{
-		Locations:       []orig_animals.Location{{}},
-		Dogs:            &[]*orig_dog.Dog{dog1},
-		DogsByNameField: map[string]*orig_dog.Dog{dog1.Name: dog1},
-		AnimalDescription: orig_animals.AnimalDescription{
-			Breed:  "Labrador",
-			Name:   "Rooney",
-			Weight: 60,
-		},
-	})
+	rover_wrapper, ok := st.GetAnimalByName("Rover")
+	require.True(t, ok)
+	require.Equal(t, rover.Name, rover_wrapper.GetAnimalDescription().GetName())
+	require.Equal(t, rover.Age, rover_wrapper.GetAnimalDescription().GetAge())
 
-	d := animal.GetDogByName(dog1.Name)
-	require.Equal(t, dog1, d.GetImpl())
+	rover_wrapper.GetAnimalDescription().SetAge(5)
+	require.Equal(t, 5, rover_wrapper.GetAnimalDescription().GetAge())
+	require.Equal(t, 5, rover.Age)
 
-	d = animal.GetDogsByNameField()[dog1.Name]
-	require.Equal(t, dog1, d.GetImpl())
+	allAnimals := st.GetAllAnimals()
+	require.Len(t, allAnimals, 1)
+	require.Equal(t, allAnimals[0].GetImpl(), rover)
 
-	animal.GetAnimalDescription().SetBreed("Pit")
-	require.Equal(t, "Pit", animal.GetAnimalDescription().GetBreed())
+	charlotte := &orig_animals.Animal{AnimalDescription: orig_animals.AnimalDescription{
+		Name:   "Charlotte",
+		Age:    7,
+		Type:   "Pig",
+		Weight: 80,
+	}}
+	allAnimals = append(allAnimals, animals.NewAnimal(charlotte))
+
+	util.NewUtils(orig_util.NewUtils(st.GetImpl())).AddAllAnimals(allAnimals)
+	allAnimals = st.GetAllAnimals()
+	require.Len(t, allAnimals, 2)
 }

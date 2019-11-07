@@ -1,17 +1,45 @@
 package animals
 
-import dog "github.com/alexodle/wrappy/testdata/generated/animals/dog"
 import orig_animals "github.com/alexodle/wrappy/testdata/input/animals"
-import orig_context "context"
-import orig_dog "github.com/alexodle/wrappy/testdata/input/animals/dog"
+
+type Animal interface {
+	GetImpl() *orig_animals.Animal
+	GetAnimalDescription() AnimalDescription
+	SetAnimalDescription(v AnimalDescription)
+}
+
+func NewAnimal(impl *orig_animals.Animal) Animal {
+	return &animalWrapper{impl: impl}
+}
+
+type animalWrapper struct {
+	impl *orig_animals.Animal
+}
+
+func (o *animalWrapper) GetImpl() *orig_animals.Animal {
+	return o.impl
+}
+
+func (wrapperRcvr *animalWrapper) GetAnimalDescription() AnimalDescription {
+	retval := &wrapperRcvr.impl.AnimalDescription
+	retval_1 := NewAnimalDescription(retval)
+	return retval_1
+}
+
+func (wrapperRcvr *animalWrapper) SetAnimalDescription(v AnimalDescription) {
+	v_1 := *v.GetImpl()
+	wrapperRcvr.impl.AnimalDescription = v_1
+}
 
 type AnimalDescription interface {
 	GetImpl() *orig_animals.AnimalDescription
-	GetBreed() string
+	GetAge() int
 	GetName() string
+	GetType() string
 	GetWeight() int
-	SetBreed(v string)
+	SetAge(v int)
 	SetName(v string)
+	SetType(v string)
 	SetWeight(v int)
 }
 
@@ -27,15 +55,6 @@ func (o *animalDescriptionWrapper) GetImpl() *orig_animals.AnimalDescription {
 	return o.impl
 }
 
-func (wrapperRcvr *animalDescriptionWrapper) GetBreed() string {
-	retval := wrapperRcvr.impl.Breed
-	return retval
-}
-
-func (wrapperRcvr *animalDescriptionWrapper) SetBreed(v string) {
-	wrapperRcvr.impl.Breed = v
-}
-
 func (wrapperRcvr *animalDescriptionWrapper) GetName() string {
 	retval := wrapperRcvr.impl.Name
 	return retval
@@ -43,6 +62,24 @@ func (wrapperRcvr *animalDescriptionWrapper) GetName() string {
 
 func (wrapperRcvr *animalDescriptionWrapper) SetName(v string) {
 	wrapperRcvr.impl.Name = v
+}
+
+func (wrapperRcvr *animalDescriptionWrapper) GetAge() int {
+	retval := wrapperRcvr.impl.Age
+	return retval
+}
+
+func (wrapperRcvr *animalDescriptionWrapper) SetAge(v int) {
+	wrapperRcvr.impl.Age = v
+}
+
+func (wrapperRcvr *animalDescriptionWrapper) GetType() string {
+	retval := wrapperRcvr.impl.Type
+	return retval
+}
+
+func (wrapperRcvr *animalDescriptionWrapper) SetType(v string) {
+	wrapperRcvr.impl.Type = v
 }
 
 func (wrapperRcvr *animalDescriptionWrapper) GetWeight() int {
@@ -54,172 +91,42 @@ func (wrapperRcvr *animalDescriptionWrapper) SetWeight(v int) {
 	wrapperRcvr.impl.Weight = v
 }
 
-type Animals interface {
-	GetImpl() *orig_animals.Animals
-	AddAnimals(animals *[]interface{}) error
-	AddDogs(dogs []dog.Dog) map[string]Animals
-	GetAllDogs(ctx orig_context.Context) []dog.Dog
-	GetAnimalDescription() AnimalDescription
-	GetDogByName(name string) dog.Dog
-	GetDogs() *[]dog.Dog
-	GetDogsByNameField() map[string]dog.Dog
-	GetDogsByNames(names []string) map[string]dog.Dog
-	GetLocation() *orig_animals.Location
-	GetLocations() []orig_animals.Location
-	SetAnimalDescription(v AnimalDescription)
-	SetDogs(v *[]dog.Dog)
-	SetDogsByNameField(v map[string]dog.Dog)
-	SetLocation(v orig_animals.Location)
-	SetLocations(v []orig_animals.Location)
+type AnimalStore interface {
+	GetImpl() *orig_animals.AnimalStore
+	AddAnimal(animal Animal)
+	GetAllAnimals() []Animal
+	GetAnimalByName(name string) (Animal, bool)
 }
 
-func NewAnimals(impl *orig_animals.Animals) Animals {
-	return &animalsWrapper{impl: impl}
+func NewAnimalStore(impl *orig_animals.AnimalStore) AnimalStore {
+	return &animalStoreWrapper{impl: impl}
 }
 
-type animalsWrapper struct {
-	impl *orig_animals.Animals
+type animalStoreWrapper struct {
+	impl *orig_animals.AnimalStore
 }
 
-func (o *animalsWrapper) GetImpl() *orig_animals.Animals {
+func (o *animalStoreWrapper) GetImpl() *orig_animals.AnimalStore {
 	return o.impl
 }
 
-func (wrapperRcvr *animalsWrapper) GetLocations() []orig_animals.Location {
-	retval := wrapperRcvr.impl.Locations
-	var retval_1 []orig_animals.Location
-	for _, it := range retval {
-		retval_1 = append(retval_1, it)
-	}
-	return retval_1
+func (wrapperRcvr *animalStoreWrapper) GetAnimalByName(name string) (Animal, bool) {
+	retval0, retval1 := wrapperRcvr.impl.GetAnimalByName(name)
+	retval0_1 := NewAnimal(retval0)
+	return retval0_1, retval1
 }
 
-func (wrapperRcvr *animalsWrapper) SetLocations(v []orig_animals.Location) {
-	var v_1 []orig_animals.Location
-	for _, it := range v {
-		v_1 = append(v_1, it)
-	}
-	wrapperRcvr.impl.Locations = v_1
-}
-
-func (wrapperRcvr *animalsWrapper) GetLocation() *orig_animals.Location {
-	retval := &wrapperRcvr.impl.Location
-	return retval
-}
-
-func (wrapperRcvr *animalsWrapper) SetLocation(v orig_animals.Location) {
-	wrapperRcvr.impl.Location = v
-}
-
-func (wrapperRcvr *animalsWrapper) GetDogs() *[]dog.Dog {
-	retval := wrapperRcvr.impl.Dogs
-	var retval_1 *[]dog.Dog
-	if retval != nil {
-		for _, it := range *retval {
-			it_1 := dog.NewDog(it)
-			*retval_1 = append(*retval_1, it_1)
-		}
-	}
-	return retval_1
-}
-
-func (wrapperRcvr *animalsWrapper) SetDogs(v *[]dog.Dog) {
-	var v_1 *[]*orig_dog.Dog
-	if v != nil {
-		for _, it := range *v {
-			it_1 := it.GetImpl()
-			*v_1 = append(*v_1, it_1)
-		}
-	}
-	wrapperRcvr.impl.Dogs = v_1
-}
-
-func (wrapperRcvr *animalsWrapper) GetDogsByNameField() map[string]dog.Dog {
-	retval := wrapperRcvr.impl.DogsByNameField
-	var retval_1 map[string]dog.Dog
-	retval_1 = map[string]dog.Dog{}
-	for k, it := range retval {
-		it_1 := dog.NewDog(it)
-		retval_1[k] = it_1
-	}
-	return retval_1
-}
-
-func (wrapperRcvr *animalsWrapper) SetDogsByNameField(v map[string]dog.Dog) {
-	var v_1 map[string]*orig_dog.Dog
-	v_1 = map[string]*orig_dog.Dog{}
-	for k, it := range v {
-		it_1 := it.GetImpl()
-		v_1[k] = it_1
-	}
-	wrapperRcvr.impl.DogsByNameField = v_1
-}
-
-func (wrapperRcvr *animalsWrapper) GetAnimalDescription() AnimalDescription {
-	retval := &wrapperRcvr.impl.AnimalDescription
-	retval_1 := NewAnimalDescription(retval)
-	return retval_1
-}
-
-func (wrapperRcvr *animalsWrapper) SetAnimalDescription(v AnimalDescription) {
-	v_1 := *v.GetImpl()
-	wrapperRcvr.impl.AnimalDescription = v_1
-}
-
-func (wrapperRcvr *animalsWrapper) GetAllDogs(ctx orig_context.Context) []dog.Dog {
-	retval0 := wrapperRcvr.impl.GetAllDogs(ctx)
-	var retval0_1 []dog.Dog
+func (wrapperRcvr *animalStoreWrapper) GetAllAnimals() []Animal {
+	retval0 := wrapperRcvr.impl.GetAllAnimals()
+	var retval0_1 []Animal
 	for _, it := range retval0 {
-		it_1 := dog.NewDog(it)
+		it_1 := NewAnimal(it)
 		retval0_1 = append(retval0_1, it_1)
 	}
 	return retval0_1
 }
 
-func (wrapperRcvr *animalsWrapper) GetDogsByNames(names []string) map[string]dog.Dog {
-	var names_1 []string
-	for _, it := range names {
-		names_1 = append(names_1, it)
-	}
-	retval0 := wrapperRcvr.impl.GetDogsByNames(names_1)
-	var retval0_1 map[string]dog.Dog
-	retval0_1 = map[string]dog.Dog{}
-	for k, it := range retval0 {
-		it_1 := dog.NewDog(it)
-		retval0_1[k] = it_1
-	}
-	return retval0_1
-}
-
-func (wrapperRcvr *animalsWrapper) GetDogByName(name string) dog.Dog {
-	retval0 := wrapperRcvr.impl.GetDogByName(name)
-	retval0_1 := dog.NewDog(retval0)
-	return retval0_1
-}
-
-func (wrapperRcvr *animalsWrapper) AddAnimals(animals *[]interface{}) error {
-	var animals_1 *[]interface{}
-	if animals != nil {
-		for _, it := range *animals {
-			*animals_1 = append(*animals_1, it)
-		}
-	}
-	retval0 := wrapperRcvr.impl.AddAnimals(animals_1)
-	return retval0
-}
-
-func (wrapperRcvr *animalsWrapper) AddDogs(dogs []dog.Dog) map[string]Animals {
-	var dogs_1 []orig_dog.Dog
-	for _, it := range dogs {
-		it_1 := *it.GetImpl()
-		dogs_1 = append(dogs_1, it_1)
-	}
-	retval0 := wrapperRcvr.impl.AddDogs(dogs_1)
-	var retval0_1 map[string]Animals
-	retval0_1 = map[string]Animals{}
-	for k, it := range retval0 {
-		it_1 := NewAnimals(&it)
-		retval0_1[k] = it_1
-	}
-	return retval0_1
+func (wrapperRcvr *animalStoreWrapper) AddAnimal(animal Animal) {
+	animal_1 := animal.GetImpl()
+	wrapperRcvr.impl.AddAnimal(animal_1)
 }

@@ -1,42 +1,36 @@
 package animals
 
-import (
-	"context"
-	"github.com/alexodle/wrappy/testdata/input/animals/dog"
-)
-
-type Animals struct {
-	Locations []Location
-	Location Location
-	Dogs *[]*dog.Dog
-	DogsByNameField map[string]*dog.Dog
+type Animal struct {
 	AnimalDescription
 }
 
-func (a *Animals) GetAllDogs(ctx context.Context) []*dog.Dog {
-	return nil
-}
-
-func (a *Animals) GetDogsByNames(names []string) map[string]*dog.Dog {
-	return nil
-}
-
-func (a *Animals) GetDogByName(name string) *dog.Dog {
-	return a.DogsByNameField[name]
-}
-
-func (a *Animals) AddAnimals(animals *[]interface{}) error {
-	return nil
-}
-
-func (a *Animals) AddDogs(dogs []dog.Dog) map[string]Animals {
-	return nil
-}
-
 type AnimalDescription struct {
-	Breed string
 	Name string
+	Age int
+	Type string
 	Weight int
 }
 
-type Location struct {}
+type AnimalStore struct {
+	animals map[string]*Animal
+}
+func NewAnimalStore() *AnimalStore {
+	return &AnimalStore{animals: map[string]*Animal{}}
+}
+
+func (a *AnimalStore) GetAnimalByName(name string) (*Animal, bool) {
+	animal, ok := a.animals[name]
+	return animal, ok
+}
+
+func (a *AnimalStore) GetAllAnimals() []*Animal {
+	var ans []*Animal
+	for _, an := range a.animals {
+		ans = append(ans, an)
+	}
+	return ans
+}
+
+func (a *AnimalStore) AddAnimal(animal *Animal) {
+	a.animals[animal.Name] = animal
+}
