@@ -82,7 +82,7 @@ func decorateFieldGetter(t *TopLevelType) *TopLevelType {
 
 	switch tt := newT.Type.(type) {
 	case *ModeledType:
-		if tt.IsPtr || tt.Interface != nil || tt.IsBuiltin || tt.UnderlyingType != "struct" {
+		if tt.IsPtr || tt.Interface != nil || tt.IsBuiltin {
 			return t
 		}
 		tt.IsPtr = true

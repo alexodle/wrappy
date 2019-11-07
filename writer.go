@@ -189,7 +189,7 @@ func fieldsNeedsRefing(p *Param) bool {
 	origType := getOriginalType(p.Type)
 	switch tt := origType.(type) {
 	case *ModeledType:
-		return !tt.IsPtr && !tt.IsBuiltin && tt.UnderlyingType == "struct"
+		return !tt.IsPtr && !tt.IsBuiltin
 	case *ArrayType, *MapType:
 		return false
 	default:
@@ -229,8 +229,11 @@ func convertArrayType(w io.Writer, oldT, newT *ArrayType, oldArrayVar vvar) vvar
 	derefArray := ""
 
 	unwrap := func() {
-		innerVar := vvar{basename: "it", t: oldT.Type}
+		if newT.IsPtr {
+			printf(w, "%s = &%s{}\n", newArrayVar.name(), formatTypeWithoutLeadingPtr(newT))
+		}
 
+		innerVar := vvar{basename: "it", t: oldT.Type}
 		printf(w, "for _, %s := range %s%s {\n", innerVar.name(), derefArray, oldArrayVar.name())
 		innerVar = convertType(w, oldT.Type, newT.Type, innerVar)
 
