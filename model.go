@@ -125,6 +125,7 @@ func (l MethodList) Less(i, j int) bool {
 
 type Type interface {
 	DeepCopy() Type
+	Equal(other Type) bool
 }
 
 type TopLevelType struct {
@@ -141,6 +142,26 @@ func (t *TopLevelType) DeepCopy() Type {
 		tt.OriginalType = t.OriginalType.DeepCopy()
 	}
 	return tt
+}
+
+func (t *TopLevelType) Equal(other Type) bool {
+	tt, ok := other.(*TopLevelType)
+	if !ok {
+		return false
+	}
+	if (t.OriginalType == nil) != (tt.OriginalType == nil) {
+		return false
+	}
+	if (t.Type == nil) != (tt.Type == nil) {
+		return false
+	}
+	if t.Type != nil && !t.Type.Equal(tt.Type) {
+		return false
+	}
+	if t.OriginalType != nil && !t.OriginalType.Equal(tt.OriginalType) {
+		return false
+	}
+	return true
 }
 
 type BaseType struct {
@@ -164,6 +185,20 @@ func (t *BaseType) DeepCopy() Type {
 	return &t2
 }
 
+func (t *BaseType) Equal(other Type) bool {
+	tt, ok := other.(*BaseType)
+	if !ok {
+		return false
+	}
+	if (t.Package == nil) != (tt.Package == nil) {
+		return false
+	}
+	if t.Package != nil && *t.Package != *tt.Package {
+		return false
+	}
+	return t.Name == tt.Name && t.IsPtr == tt.IsPtr && t.IsBuiltin == tt.IsBuiltin && t.UnderlyingType == t.UnderlyingType
+}
+
 type ModeledType struct {
 	BaseType
 	LocalNameForPkg   string
@@ -176,6 +211,23 @@ func (t *ModeledType) DeepCopy() Type {
 	return &t2
 }
 
+func (t *ModeledType) Equal(other Type) bool {
+	tt, ok := other.(*ModeledType)
+	if !ok {
+		return false
+	}
+	if !t.BaseType.Equal(&tt.BaseType) {
+		return false
+	}
+	if (t.Interface == nil) != (tt.Interface == nil) {
+		return false
+	}
+	if t.Interface != nil && t.Interface.Name != tt.Interface.Name {
+		return false
+	}
+	return t.LocalNameForPkg == tt.LocalNameForPkg && t.NewFuncNameForPkg == tt.NewFuncNameForPkg
+}
+
 type ArrayType struct {
 	Type  Type
 	IsPtr bool
@@ -185,6 +237,20 @@ func (t *ArrayType) DeepCopy() Type {
 	t2 := *t
 	t2.Type = t2.Type.DeepCopy()
 	return &t2
+}
+
+func (t *ArrayType) Equal(other Type) bool {
+	tt, ok := other.(*ArrayType)
+	if !ok {
+		return false
+	}
+	if (t.Type == nil) != (tt.Type == nil) {
+		return false
+	}
+	if t.Type != nil && !t.Type.Equal(tt.Type) {
+		return false
+	}
+	return t.IsPtr == t.IsPtr
 }
 
 type MapType struct {
@@ -200,6 +266,26 @@ func (t *MapType) DeepCopy() Type {
 	return &t2
 }
 
+func (t *MapType) Equal(other Type) bool {
+	tt, ok := other.(*MapType)
+	if !ok {
+		return false
+	}
+	if (t.ValueType == nil) != (tt.ValueType == nil) {
+		return false
+	}
+	if (t.KeyType == nil) != (tt.KeyType == nil) {
+		return false
+	}
+	if t.ValueType != nil && !t.ValueType.Equal(tt.ValueType) {
+		return false
+	}
+	if t.KeyType != nil && !t.KeyType.Equal(tt.KeyType) {
+		return false
+	}
+	return t.IsPtr == t.IsPtr
+}
+
 type UnsupportedType struct {
 	AstType string
 }
@@ -207,4 +293,12 @@ type UnsupportedType struct {
 func (t *UnsupportedType) DeepCopy() Type {
 	t2 := *t
 	return &t2
+}
+
+func (t *UnsupportedType) Equal(other Type) bool {
+	tt, ok := other.(*UnsupportedType)
+	if !ok {
+		return false
+	}
+	return t.AstType == tt.AstType
 }

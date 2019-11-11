@@ -291,6 +291,10 @@ func convertMapType(w io.Writer, oldT, newT *MapType, oldMapVar vvar) vvar {
 }
 
 func convertType(w io.Writer, oldT, newT Type, oldVar vvar) vvar {
+	if oldT.Equal(newT) {
+		return oldVar
+	}
+
 	if _, ok := newT.(*ModeledType); ok {
 		newVar := oldVar.next(newT)
 		if oldT.(*ModeledType).Interface != nil {
