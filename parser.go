@@ -20,35 +20,43 @@ func (w walker) Visit(node ast.Node) ast.Visitor {
 	return nil
 }
 
-func Parse(dirs ...string) StructStore {
+func Parse(dir string) StructStore {
+	return ParseWithWhitelist(dir, nil)
+}
+
+func ParseWithWhitelist(dir string, structWhitelist map[string]struct{}) StructStore {
 	structs := StructStore{}
 
 	// Structs
 	fset := token.NewFileSet()
-	for _, dir := range dirs {
-		err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-			if err == nil && !info.IsDir() && strings.HasSuffix(path, ".go") {
-				parseStructsFromFile(fset, path, filepath.Dir(path), structs)
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err == nil && !info.IsDir() && strings.HasSuffix(path, ".go") {
+			parseStructsFromFile(fset, path, filepath.Dir(path), structs)
+		}
+		return err
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	if structWhitelist != nil {
+		for k, _ := range structs {
+			if _, ok := structWhitelist[k]; !ok {
+				delete(structs, k)
 			}
-			return err
-		})
-		if err != nil {
-			panic(err)
 		}
 	}
 
 	// Methods
 	fset = token.NewFileSet()
-	for _, dir := range dirs {
-		err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-			if err == nil && !info.IsDir() && strings.HasSuffix(path, ".go") {
-				parseMethodsFromFile(fset, path, filepath.Dir(path), structs)
-			}
-			return err
-		})
-		if err != nil {
-			panic(err)
+	err = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err == nil && !info.IsDir() && strings.HasSuffix(path, ".go") {
+			parseMethodsFromFile(fset, path, filepath.Dir(path), structs)
 		}
+		return err
+	})
+	if err != nil {
+		panic(err)
 	}
 
 	return structs

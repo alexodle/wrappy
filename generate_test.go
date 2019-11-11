@@ -12,7 +12,7 @@ import (
 
 func Test_Generate(t *testing.T) {
 	require.NoError(t, os.RemoveAll("testdata/generated"))
-	GenerateWrappers("testdata/input", "testdata/generated")
+	GenerateWrappers("testdata/input", "testdata/generated", GenerateWrappersOptions{})
 }
 
 func Test_GeneratedCode(t *testing.T) {
