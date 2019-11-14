@@ -30,7 +30,7 @@ func main() {
 }
 
 func parseWhitelistFile(whitelistFile *string) map[string]struct{} {
-	if whitelistFile == nil {
+	if whitelistFile == nil || *whitelistFile == "" {
 		return nil
 	}
 
@@ -40,7 +40,7 @@ func parseWhitelistFile(whitelistFile *string) map[string]struct{} {
 	if err != nil {
 		panic(err)
 	}
-	defer func () { _ = file.Close() }()
+	defer func() { _ = file.Close() }()
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
