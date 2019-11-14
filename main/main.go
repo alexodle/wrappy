@@ -51,7 +51,7 @@ func parseWhitelistFile(whitelistFile *string) map[string]struct{} {
 	}
 
 	if err := scanner.Err(); err != nil {
-		panic(err)
+		panic(fmt.Errorf("failed to open whitelist file: %s", *whitelistFile))
 	}
 
 	return whitelist
